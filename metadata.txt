@@ -1,0 +1,39 @@
+# This file contains metadata for your plugin. Since 
+# version 2.0 of QGIS this is the proper way to supply 
+# information about a plugin. The old method of 
+# embedding metadata in __init__.py will 
+# is no longer supported since version 2.0.
+
+# This file should be included when you package your plugin.# Mandatory items:
+
+[general]
+name=QGIS_ISODATA
+qgisMinimumVersion=3.0
+description=An ISODATA plugin for QGIS.
+version=0.1
+author=LaZzy
+email=924797163@qq.com
+
+about=An ISODATA plugin for QGIS.
+
+tracker=https://github.com/LaZzyMan/QGIS-ISODATA
+repository=https://github.com/LaZzyMan/QGIS-ISODATA
+# End of mandatory metadata
+
+# Recommended items:
+
+# Uncomment the following line and add your changelog:
+# changelog=
+
+# Tags are comma separated with spaces allowed
+tags=python
+
+homepage=https://github.com/LaZzyMan/QGIS-ISODATA
+category=Plugins
+icon=icon.png
+# experimental flag
+experimental=False
+
+# deprecated flag (applies to the whole plugin, not just a single version)
+deprecated=False
+

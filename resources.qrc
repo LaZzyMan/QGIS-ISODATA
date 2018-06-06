@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/QGIS_ISODATA" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
