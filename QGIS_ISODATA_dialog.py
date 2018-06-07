@@ -52,8 +52,18 @@ def findArray(A, arr):
             return i
     return -1
 
+def img2pixmap(image):
+    Y, X = image.shape[:2]
+    bgra = np.zeros((Y, X, 4), dtype=np.uint8, order='C')
+    bgra[..., 0] = image[..., 2]
+    bgra[..., 1] = image[..., 1]
+    bgra[..., 2] = image[..., 0]
+    qimage = QtGui.QImage(bgra.data, X, Y, QtGui.QImage.Format_RGB32)
+    pixmap = QtGui.QPixmap.fromImage(qimage)
+    return pixmap
 
-class ISODATA(QMainWindow, Ui_ISODATA):
+
+class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
     """
     Class documentation goes here.
     """
@@ -82,9 +92,7 @@ class ISODATA(QMainWindow, Ui_ISODATA):
         img = {}
         for i in range(self.width):
             for j in range(self.height):
-                img[(i, j)] = array(
-                    [self.img[0][i, j], self.img[1][i, j], self.img[2][i, j], self.img[3][i, j], self.img[4][i, j],
-                     self.img[5][i, j]], dtype=int)
+                img[(i, j)] = array([im[i, j] for im in self.img], dtype=int)
         del self.img
 
         C = 5
@@ -262,10 +270,14 @@ class ISODATA(QMainWindow, Ui_ISODATA):
                 self.result[fij[0], fij[1]] = self.colorMap[i]
         self.pushButton_changeColor.setEnabled(True)
 
-        misc.imsave('temp.png', self.result)
-        self.label_IMG.setPixmap(QPixmap('temp.png'))
+        # 将narray转为QPixmap
+        # self.label_IMG.setPixmap(img2pixmap(self.result))
+        # qimg = QtGui.QImage(self.result.data, self.width, self.height, QtGui.QImage.Format_RGB32)
+        # self.label_IMG.setPixmap(QPixmap.fromImage(qimg))
+        misc.imsave('D:/temp.png', self.result)
+        self.label_IMG.setPixmap(QPixmap('D:/temp.png'))
         self.label_progress.setText('完成！')
-        os.remove('temp.png')
+        os.remove('D:/temp.png')
         self.pushButton_save.setEnabled(True)
         return
 
@@ -314,7 +326,7 @@ class ISODATA(QMainWindow, Ui_ISODATA):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        if self.result == None:
+        if self.result is None:
             QMessageBox.information(self, 'Error', '没有可保存图像')
             return
         filename = QFileDialog.getSaveFileName(self, '保存文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')

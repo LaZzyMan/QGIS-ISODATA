@@ -7,12 +7,15 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import os
+
 
 class Ui_ISODATA(object):
     def setupUi(self, ISODATA):
         ISODATA.setObjectName("ISODATA")
         ISODATA.setEnabled(True)
         ISODATA.resize(1600, 900)
+        ISODATA.setWindowIcon(QtGui.QIcon(os.path.join(os.path.dirname(__file__), 'icon.png')))
         self.centralWidget = QtWidgets.QWidget(ISODATA)
         self.centralWidget.setObjectName("centralWidget")
         self.groupBox = QtWidgets.QGroupBox(self.centralWidget)
@@ -142,7 +145,7 @@ class Ui_ISODATA(object):
         self.tabWidget.setGeometry(QtCore.QRect(330, 10, 600, 600))
         self.tabWidget.setObjectName("tabWidget")
 
-        ISODATA.setCentralWidget(self.centralWidget)
+        # ISODATA.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(ISODATA)
         self.tabWidget.setCurrentIndex(0)
@@ -150,7 +153,7 @@ class Ui_ISODATA(object):
 
     def retranslateUi(self, ISODATA):
         _translate = QtCore.QCoreApplication.translate
-        ISODATA.setWindowTitle(_translate("ISODATA", "TM图像分类"))
+        ISODATA.setWindowTitle(_translate("ISODATA", "ISODATA 图像分类"))
         self.groupBox.setTitle(_translate("ISODATA", "参数设置"))
         self.label.setText(_translate("ISODATA", "聚类中心数 "))
         self.label_2.setText(_translate("ISODATA", "最少样本数 "))
@@ -168,9 +171,9 @@ class Ui_ISODATA(object):
         self.pushButton_changeColor.setText(_translate("ISODATA", "更改配色"))
         self.groupBox_color.setTitle(_translate("ISODATA", "颜色分布"))
         self.groupBox_4.setTitle(_translate("ISODATA", "图层数据"))
-        self.pushButton_remove.setText(_translate("ISODATA", "删除图像"))
-        self.pushButton_display.setText(_translate("ISODATA", "清空"))
-        self.pushButton_add.setText(_translate("ISODATA", "添加图像"))
+        self.pushButton_remove.setText(_translate("ISODATA", "删除图层"))
+        self.pushButton_display.setText(_translate("ISODATA", "清空图层"))
+        self.pushButton_add.setText(_translate("ISODATA", "添加图层"))
         self.groupBox_5.setTitle(_translate("ISODATA", "运行进度"))
         self.label_progress.setText(_translate("ISODATA", "准备就绪"))
 

@@ -30,6 +30,7 @@ from .resources import *
 # Import the code for the dialog
 from .QGIS_ISODATA_dialog import QGIS_ISODATADialog, ISODATA
 import os.path
+import sys
 
 
 class QGIS_ISODATA:
@@ -192,4 +193,4 @@ class QGIS_ISODATA:
         if result:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
-            pass
+            sys.exit(result)
