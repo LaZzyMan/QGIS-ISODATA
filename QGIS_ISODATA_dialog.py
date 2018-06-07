@@ -22,16 +22,17 @@
  ***************************************************************************/
 """
 
-import os
 import re
-from PyQt5.QtCore import pyqtSlot, Qt
-from PyQt5.QtWidgets import QMainWindow, QMessageBox, QProgressDialog, QColorDialog, QFileDialog
+import os
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QMessageBox, QColorDialog, QFileDialog
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QPixmap, QColor
 from numpy import *
 from numba import jit
 import matplotlib.image as image
 from scipy import misc
+
 if __name__ == '__main__':
     from Ui_ISODATA import Ui_ISODATA
 else:
@@ -86,7 +87,7 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
 
         # with open(os.path.join(os.path.dirname(__file__), 'style.qss')) as qss:
         #     self.setStyleSheet(qss.read())
-        with open(os.path.join(os.path.dirname(__file__), 'black.qss'), encoding='utf-8') as qss:
+        with open(os.path.join(os.path.dirname(__file__), 'src/black.qss'), encoding='utf-8') as qss:
             self.setStyleSheet(qss.read())
 
     def ISODATA(self):
@@ -438,18 +439,6 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
     @pyqtSlot()
     def on_pushButton_min_clicked(self):
         self.setWindowState(QtCore.Qt.WindowMinimized)
-
-
-class QGIS_ISODATADialog(QtWidgets.QDialog, Ui_ISODATA):
-    def __init__(self, parent=None):
-        """Constructor."""
-        super(QGIS_ISODATADialog, self).__init__(parent)
-        # Set up the user interface from Designer.
-        # After setupUI you can access any designer object by doing
-        # self.<objectname>, and you can use autoconnect slots - see
-        # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
-        # #widgets-and-dialogs-with-auto-connect
-        self.setupUi(self)
 
 
 if __name__ == '__main__':

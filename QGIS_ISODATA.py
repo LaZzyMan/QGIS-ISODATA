@@ -90,7 +90,6 @@ class QGIS_ISODATA:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('QGIS_ISODATA', message)
 
-
     def add_action(
         self,
         icon_path,
