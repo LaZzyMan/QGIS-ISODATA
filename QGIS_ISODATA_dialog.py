@@ -84,7 +84,9 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         for i in range(10, 50):
             self.colorMap[i] = [random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)]
 
-        with open(os.path.join(os.path.dirname(__file__), 'style.qss')) as qss:
+        # with open(os.path.join(os.path.dirname(__file__), 'style.qss')) as qss:
+        #     self.setStyleSheet(qss.read())
+        with open(os.path.join(os.path.dirname(__file__), 'black.qss'), encoding='utf-8') as qss:
             self.setStyleSheet(qss.read())
 
     def ISODATA(self):
@@ -386,10 +388,10 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         self.colorblocks[target].setStyleSheet('QPushButton{background-color:%s}' % color.name())
         for fij in self.f[target]:
             self.result[fij[0], fij[1]] = self.colorMap[target]
-        misc.imsave('temp.png', self.result)
-        self.label_IMG.setPixmap(QPixmap('temp.png'))
+        misc.imsave('D:/temp.png', self.result)
+        self.label_IMG.setPixmap(QPixmap('D:/temp.png'))
         self.label_progress.setText('完成！')
-        os.remove('temp.png')
+        os.remove('D:/temp.png')
 
     @pyqtSlot()
     def on_pushButton_add_clicked(self):
@@ -428,6 +430,14 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
             self.tabWidget.addTab(tab, "")
             self.tabWidget.setTabText(self.tabWidget.indexOf(tab), '图层' + str(self.numOfPicture))
             label_Result.setPixmap(QPixmap(filename))
+
+    @pyqtSlot()
+    def on_pushButton_close_clicked(self):
+        self.close()
+
+    @pyqtSlot()
+    def on_pushButton_min_clicked(self):
+        self.setWindowState(QtCore.Qt.WindowMinimized)
 
 
 class QGIS_ISODATADialog(QtWidgets.QDialog, Ui_ISODATA):

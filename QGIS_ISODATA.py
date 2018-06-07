@@ -22,8 +22,10 @@
  ***************************************************************************/
 """
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QAction, QFileDialog
+from PyQt5 import QtWidgets
+import matplotlib.image as image
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -161,6 +163,39 @@ class QGIS_ISODATA:
         self.actions.append(action)
 
         return action
+
+    def add_layer(self):
+        filenames = QFileDialog(self).getOpenFileNames(self, '打开图像文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
+        for filename in filenames[0]:
+            self.numOfPicture += 1
+            f = image.imread(filename)
+            self.width = len(f)
+            self.height = len(f[0])
+            self.listWidget_IMG.addItem(filename+'main')
+            self.img.append(f)
+
+            tab = QtWidgets.QWidget()
+            tab.setObjectName("tab")
+            gridLayout_6 = QtWidgets.QGridLayout(tab)
+            gridLayout_6.setContentsMargins(0, 0, 0, 0)
+            gridLayout_6.setObjectName("gridLayout_6")
+            scrollArea_2 = QtWidgets.QScrollArea(tab)
+            scrollArea_2.setWidgetResizable(True)
+            scrollArea_2.setObjectName("scrollArea_2")
+            scrollAreaWidgetContents_2 = QtWidgets.QWidget()
+            scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 570, 548))
+            scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
+            gridLayout_5 = QtWidgets.QGridLayout(scrollAreaWidgetContents_2)
+            gridLayout_5.setContentsMargins(0, 0, 0, 0)
+            gridLayout_5.setObjectName("gridLayout_5")
+            label_Result = QtWidgets.QLabel(scrollAreaWidgetContents_2)
+            label_Result.setObjectName("label_Result")
+            gridLayout_5.addWidget(label_Result, 0, 1, 1, 1)
+            scrollArea_2.setWidget(scrollAreaWidgetContents_2)
+            gridLayout_6.addWidget(scrollArea_2, 0, 0, 1, 1)
+            self.tabWidget.addTab(tab, "")
+            self.tabWidget.setTabText(self.tabWidget.indexOf(tab), '图层' + str(self.numOfPicture))
+            label_Result.setPixmap(QPixmap(filename))
 
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
