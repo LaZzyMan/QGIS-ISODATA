@@ -23,17 +23,17 @@
 """
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QAction, QFileDialog
+from PyQt5.QtWidgets import QAction, QFileDialog, QMessageBox
 from PyQt5 import QtWidgets
 import matplotlib.image as image
+from scipy import misc
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
-from .QGIS_ISODATA_dialog import QGIS_ISODATADialog, ISODATA
+from .QGIS_ISODATA_dialog import ISODATA
 import os.path
 import sys
-
 
 class QGIS_ISODATA:
     """QGIS Plugin Implementation."""
@@ -67,6 +67,12 @@ class QGIS_ISODATA:
         # Create the dialog (after translation) and keep reference
         # self.dlg = QGIS_ISODATADialog()
         self.dlg = ISODATA()
+        # 插件模式下的响应和UI修改
+        self.dlg.pushButton_add.clicked.connect(self.add_layer)
+        self.dlg.pushButton_save.clicked.connect(self.save_layer)
+        self.dlg.pushButton_save.setText('保存结果')
+        self.dlg.pushButton_add.setText('添加通道')
+        self.dlg.pushButton_remove.setText('删除通道')
 
         # Declare instance attributes
         self.actions = []
@@ -163,49 +169,15 @@ class QGIS_ISODATA:
 
         return action
 
-    def add_layer(self):
-        filenames = QFileDialog(self).getOpenFileNames(self, '打开图像文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
-        for filename in filenames[0]:
-            self.numOfPicture += 1
-            f = image.imread(filename)
-            self.width = len(f)
-            self.height = len(f[0])
-            self.listWidget_IMG.addItem(filename+'main')
-            self.img.append(f)
-
-            tab = QtWidgets.QWidget()
-            tab.setObjectName("tab")
-            gridLayout_6 = QtWidgets.QGridLayout(tab)
-            gridLayout_6.setContentsMargins(0, 0, 0, 0)
-            gridLayout_6.setObjectName("gridLayout_6")
-            scrollArea_2 = QtWidgets.QScrollArea(tab)
-            scrollArea_2.setWidgetResizable(True)
-            scrollArea_2.setObjectName("scrollArea_2")
-            scrollAreaWidgetContents_2 = QtWidgets.QWidget()
-            scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 570, 548))
-            scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
-            gridLayout_5 = QtWidgets.QGridLayout(scrollAreaWidgetContents_2)
-            gridLayout_5.setContentsMargins(0, 0, 0, 0)
-            gridLayout_5.setObjectName("gridLayout_5")
-            label_Result = QtWidgets.QLabel(scrollAreaWidgetContents_2)
-            label_Result.setObjectName("label_Result")
-            gridLayout_5.addWidget(label_Result, 0, 1, 1, 1)
-            scrollArea_2.setWidget(scrollAreaWidgetContents_2)
-            gridLayout_6.addWidget(scrollArea_2, 0, 0, 1, 1)
-            self.tabWidget.addTab(tab, "")
-            self.tabWidget.setTabText(self.tabWidget.indexOf(tab), '图层' + str(self.numOfPicture))
-            label_Result.setPixmap(QPixmap(filename))
-
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/QGIS_ISODATA/icon.png'
+        icon_path = ':/plugins/QGIS_ISODATA/src/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'ISODATA'),
             callback=self.run,
             parent=self.iface.mainWindow())
-
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -228,3 +200,49 @@ class QGIS_ISODATA:
             # Do something useful here - delete the line containing pass and
             # substitute with your code.
             sys.exit(result)
+
+    def add_layer(self):
+        filenames = QFileDialog(self.dlg).getOpenFileNames(self.dlg, '打开图像文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
+        for filename in filenames[0]:
+            self.dlg.numOfPicture += 1
+            self.iface.addRasterLayer(filename, '通道 ' + str(self.dlg.numOfPicture))
+            f = image.imread(filename)
+            self.dlg.width = len(f)
+            self.dlg.height = len(f[0])
+            self.dlg.listWidget_IMG.addItem('通道 ' + str(self.dlg.numOfPicture) + ': ' + filename)
+            self.dlg.img.append(f)
+
+            tab = QtWidgets.QWidget()
+            tab.setObjectName("tab")
+            gridLayout_6 = QtWidgets.QGridLayout(tab)
+            gridLayout_6.setContentsMargins(0, 0, 0, 0)
+            gridLayout_6.setObjectName("gridLayout_6")
+            scrollArea_2 = QtWidgets.QScrollArea(tab)
+            scrollArea_2.setWidgetResizable(True)
+            scrollArea_2.setObjectName("scrollArea_2")
+            scrollAreaWidgetContents_2 = QtWidgets.QWidget()
+            scrollAreaWidgetContents_2.setGeometry(QtCore.QRect(0, 0, 570, 548))
+            scrollAreaWidgetContents_2.setObjectName("scrollAreaWidgetContents_2")
+            gridLayout_5 = QtWidgets.QGridLayout(scrollAreaWidgetContents_2)
+            gridLayout_5.setContentsMargins(0, 0, 0, 0)
+            gridLayout_5.setObjectName("gridLayout_5")
+            label_Result = QtWidgets.QLabel(scrollAreaWidgetContents_2)
+            label_Result.setObjectName("label_Result")
+            gridLayout_5.addWidget(label_Result, 0, 1, 1, 1)
+            scrollArea_2.setWidget(scrollAreaWidgetContents_2)
+            gridLayout_6.addWidget(scrollArea_2, 0, 0, 1, 1)
+            self.dlg.tabWidget.addTab(tab, "")
+            self.dlg.tabWidget.setTabText(self.dlg.tabWidget.indexOf(tab), '通道 ' + str(self.dlg.numOfPicture))
+            label_Result.setPixmap(QPixmap(filename))
+
+    def save_layer(self):
+        """
+        Slot documentation goes here.
+        """
+        # TODO: not implemented yet
+        if self.dlg.result is None:
+            QMessageBox.information(self.dlg, 'Error', '没有可保存图像')
+            return
+        filename = QFileDialog.getSaveFileName(self.dlg, '保存文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
+        misc.imsave(filename[0], self.dlg.result)
+        self.iface.addRasterLayer(filename[0], '分类结果')

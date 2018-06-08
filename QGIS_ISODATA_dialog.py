@@ -89,6 +89,10 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         #     self.setStyleSheet(qss.read())
         with open(os.path.join(os.path.dirname(__file__), 'src/black.qss'), encoding='utf-8') as qss:
             self.setStyleSheet(qss.read())
+        # 非插件模式下添加文件
+        if __name__ == '__main__':
+            self.pushButton_add.clicked.connect(self.add_image_file)
+            self.pushButton_save.clicked.connect(self.save_image_file)
 
     def ISODATA(self):
         # 建立特征值字典
@@ -324,18 +328,6 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         self.pushButton_cancel.setEnabled(True)
 
     @pyqtSlot()
-    def on_pushButton_save_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-        # TODO: not implemented yet
-        if self.result is None:
-            QMessageBox.information(self, 'Error', '没有可保存图像')
-            return
-        filename = QFileDialog.getSaveFileName(self, '保存文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
-        misc.imsave(filename[0], self.result)
-
-    @pyqtSlot()
     def on_pushButton_changeColor_clicked(self):
         """
         Slot documentation goes here.
@@ -395,7 +387,14 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         os.remove('D:/temp.png')
 
     @pyqtSlot()
-    def on_pushButton_add_clicked(self):
+    def on_pushButton_close_clicked(self):
+        self.close()
+
+    @pyqtSlot()
+    def on_pushButton_min_clicked(self):
+        self.setWindowState(QtCore.Qt.WindowMinimized)
+
+    def add_image_file(self):
         """
         Slot documentation goes here.
         """
@@ -432,13 +431,16 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
             self.tabWidget.setTabText(self.tabWidget.indexOf(tab), '图层' + str(self.numOfPicture))
             label_Result.setPixmap(QPixmap(filename))
 
-    @pyqtSlot()
-    def on_pushButton_close_clicked(self):
-        self.close()
-
-    @pyqtSlot()
-    def on_pushButton_min_clicked(self):
-        self.setWindowState(QtCore.Qt.WindowMinimized)
+    def save_image_file(self):
+        """
+        Slot documentation goes here.
+        """
+        # TODO: not implemented yet
+        if self.result is None:
+            QMessageBox.information(self, 'Error', '没有可保存图像')
+            return
+        filename = QFileDialog.getSaveFileName(self, '保存文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
+        misc.imsave(filename[0], self.result)
 
 
 if __name__ == '__main__':
