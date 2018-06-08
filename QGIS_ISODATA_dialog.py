@@ -93,6 +93,7 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         if __name__ == '__main__':
             self.pushButton_add.clicked.connect(self.add_image_file)
             self.pushButton_save.clicked.connect(self.save_image_file)
+            self.pushButton_remove.clicked.connect(self.remove_image)
 
     def ISODATA(self):
         # 建立特征值字典
@@ -347,20 +348,6 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
             gridLayout_color.addWidget(self.colorblocks[i])
 
     @pyqtSlot()
-    def on_pushButton_remove_clicked(self):
-        """
-        Slot documentation goes here.
-        """
-        # TODO: not implemented yet
-        target = self.listWidget_IMG.currentRow()
-        self.listWidget_IMG.takeItem(target)
-        self.img.pop(target)
-        self.tabWidget.removeTab(target)
-        self.numOfPicture -= 1
-        self.label_progress.setText('准备就绪')
-        self.progressBar.setValue(0)
-
-    @pyqtSlot()
     def on_pushButton_display_clicked(self):
         """
         Slot documentation goes here.
@@ -441,6 +428,19 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
             return
         filename = QFileDialog.getSaveFileName(self, '保存文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
         misc.imsave(filename[0], self.result)
+
+    def remove_image(self):
+        """
+        Slot documentation goes here.
+        """
+        # TODO: not implemented yet
+        target = self.listWidget_IMG.currentRow()
+        self.listWidget_IMG.takeItem(target)
+        self.img.pop(target)
+        self.tabWidget.removeTab(target)
+        self.numOfPicture -= 1
+        self.label_progress.setText('准备就绪')
+        self.progressBar.setValue(0)
 
 
 if __name__ == '__main__':

@@ -25,6 +25,7 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import QAction, QFileDialog, QMessageBox
 from PyQt5 import QtWidgets
+from qgis.core import QgsProject
 import matplotlib.image as image
 from scipy import misc
 
@@ -70,9 +71,11 @@ class QGIS_ISODATA:
         # 插件模式下的响应和UI修改
         self.dlg.pushButton_add.clicked.connect(self.add_layer)
         self.dlg.pushButton_save.clicked.connect(self.save_layer)
+        self.dlg.pushButton_remove.clicked.connect(self.remove_layer)
         self.dlg.pushButton_save.setText('保存结果')
         self.dlg.pushButton_add.setText('添加通道')
         self.dlg.pushButton_remove.setText('删除通道')
+        self.layers = []
 
         # Declare instance attributes
         self.actions = []
@@ -205,7 +208,8 @@ class QGIS_ISODATA:
         filenames = QFileDialog(self.dlg).getOpenFileNames(self.dlg, '打开图像文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
         for filename in filenames[0]:
             self.dlg.numOfPicture += 1
-            self.iface.addRasterLayer(filename, '通道 ' + str(self.dlg.numOfPicture))
+            layer = self.iface.addRasterLayer(filename, '通道 ' + str(self.dlg.numOfPicture))
+            self.layers.append(layer.id())
             f = image.imread(filename)
             self.dlg.width = len(f)
             self.dlg.height = len(f[0])
@@ -246,3 +250,17 @@ class QGIS_ISODATA:
         filename = QFileDialog.getSaveFileName(self.dlg, '保存文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
         misc.imsave(filename[0], self.dlg.result)
         self.iface.addRasterLayer(filename[0], '分类结果')
+
+    def remove_layer(self):
+        """
+        Slot documentation goes here.
+        """
+        # TODO: not implemented yet
+        target = self.dlg.listWidget_IMG.currentRow()
+        self.dlg.listWidget_IMG.takeItem(target)
+        self.dlg.img.pop(target)
+        self.dlg.tabWidget.removeTab(target)
+        self.dlg.numOfPicture -= 1
+        self.dlg.label_progress.setText('准备就绪')
+        self.dlg.progressBar.setValue(0)
+        QgsProject.instance().removeMapLayer(self.layers[target])
