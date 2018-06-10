@@ -205,6 +205,3 @@ if __name__ == "__main__":
     ui.setupUi(ISODATA)
     ISODATA.show()
     sys.exit(app.exec_())
-
-
-

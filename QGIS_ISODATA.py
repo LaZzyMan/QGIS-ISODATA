@@ -28,13 +28,32 @@ from PyQt5 import QtWidgets
 from qgis.core import QgsProject
 import matplotlib.image as image
 from scipy import misc
+from numpy import *
+from .progress_dialog import ProgressBar
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
 from .QGIS_ISODATA_dialog import ISODATA
 import os.path
-import sys
+from numba import jit
+
+
+@jit(nopython=True)
+def distance(l1, l2):
+    d = 0
+    l = l1 - l2
+    for x in l:
+        d = d + x**2
+    return sqrt(d)
+
+
+def findArray(A, arr):
+    for i, a in zip(range(len(A)), A):
+        if (a == arr).all():
+            return i
+    return -1
+
 
 class QGIS_ISODATA:
     """QGIS Plugin Implementation."""
@@ -68,6 +87,7 @@ class QGIS_ISODATA:
         # Create the dialog (after translation) and keep reference
         # self.dlg = QGIS_ISODATADialog()
         self.dlg = ISODATA()
+        self.progressBar = ProgressBar()
         # 插件模式下的响应和UI修改
         self.dlg.pushButton_add.clicked.connect(self.add_layer)
         self.dlg.pushButton_save.clicked.connect(self.save_layer)
@@ -175,11 +195,30 @@ class QGIS_ISODATA:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/QGIS_ISODATA/src/icon.png'
         self.add_action(
-            icon_path,
-            text=self.tr(u'ISODATA'),
+            ':/plugins/QGIS_ISODATA/src/icon.png',
+            text=self.tr(u'Home'),
             callback=self.run,
+            parent=self.iface.mainWindow())
+        self.add_action(
+            ':/plugins/QGIS_ISODATA/src/add.png',
+            text=self.tr(u'Add'),
+            callback=self.add_layer,
+            parent=self.iface.mainWindow())
+        self.add_action(
+            ':/plugins/QGIS_ISODATA/src/clear.png',
+            text=self.tr(u'Clear'),
+            callback=self.remove_layers,
+            parent=self.iface.mainWindow())
+        self.add_action(
+            ':/plugins/QGIS_ISODATA/src/play.png',
+            text=self.tr(u'Solve'),
+            callback=self.quickSolve,
+            parent=self.iface.mainWindow())
+        self.add_action(
+            ':/plugins/QGIS_ISODATA/src/save.png',
+            text=self.tr(u'Save'),
+            callback=self.save_layer,
             parent=self.iface.mainWindow())
 
     def unload(self):
@@ -197,12 +236,12 @@ class QGIS_ISODATA:
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
-        result = self.dlg.exec_()
+        # result = self.dlg.exec_()
         # See if OK was pressed
-        if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-            sys.exit(result)
+        # if result:
+        #     # Do something useful here - delete the line containing pass and
+        #     # substitute with your code.
+        #     sys.exit(result)
 
     def add_layer(self):
         filenames = QFileDialog(self.dlg).getOpenFileNames(self.dlg, '打开图像文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
@@ -238,14 +277,16 @@ class QGIS_ISODATA:
             self.dlg.tabWidget.addTab(tab, "")
             self.dlg.tabWidget.setTabText(self.dlg.tabWidget.indexOf(tab), '通道 ' + str(self.dlg.numOfPicture))
             label_Result.setPixmap(QPixmap(filename))
+            if self.dlg.isHidden() and self.progressBar.isHidden():
+                self.progressBar.show()
 
     def save_layer(self):
         """
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        if self.dlg.result is None:
-            QMessageBox.information(self.dlg, 'Error', '没有可保存图像')
+        if not self.dlg.finish:
+            QMessageBox.information(self.dlg, 'ERROR', '没有可保存图像')
             return
         filename = QFileDialog.getSaveFileName(self.dlg, '保存文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
         misc.imsave(filename[0], self.dlg.result)
@@ -258,9 +299,187 @@ class QGIS_ISODATA:
         # TODO: not implemented yet
         target = self.dlg.listWidget_IMG.currentRow()
         self.dlg.listWidget_IMG.takeItem(target)
-        self.dlg.img.pop(target)
+        if self.dlg.img is not None:
+            self.dlg.img.pop(target)
         self.dlg.tabWidget.removeTab(target)
         self.dlg.numOfPicture -= 1
         self.dlg.label_progress.setText('准备就绪')
         self.dlg.progressBar.setValue(0)
         QgsProject.instance().removeMapLayer(self.layers[target])
+        if not self.progressBar.isHidden(): self.progressBar.hide()
+
+    def remove_layers(self):
+        """
+        Slot documentation goes here.
+        """
+        # TODO: not implemented yet
+        for i in range(len(self.layers)):
+            self.dlg.listWidget_IMG.takeItem(i)
+            try:
+                self.dlg.img.pop(i)
+            except:
+                print('')
+            self.dlg.tabWidget.removeTab(i)
+            self.dlg.numOfPicture -= 1
+            self.dlg.label_progress.setText('准备就绪')
+            self.dlg.progressBar.setValue(0)
+            QgsProject.instance().removeMapLayer(self.layers[i])
+            if not self.progressBar.isHidden(): self.progressBar.hide()
+
+    def quickSolve(self):
+        self.progressBar.setWindowOpacity(1)
+        self.dlg.K = 10
+        self.dlg.L = 10
+        self.dlg.I = 10
+        self.dlg.thetaC = 10
+        self.dlg.thetaN = 1000
+        self.dlg.thetaS = 14
+        self.dlg.lineEdit_K.setText('10')
+        self.dlg.lineEdit_I.setText('10')
+        self.dlg.lineEdit_thetaN.setText('1000')
+        self.dlg.lineEdit_L.setText('10')
+        self.dlg.lineEdit_thetaC.setText('10')
+        self.dlg.lineEdit_thetaS.setText('14')
+        self.dlg.pushButton_iteration.setEnabled(True)
+        self.dlg.pushButton_cancel.setEnabled(True)
+
+        if len(self.dlg.img) == 0:
+            QMessageBox.information(self.dlg, 'ERROR', '未读入任何图像')
+            return
+        self.dlg.f = self.solve()
+        if self.dlg.f is None:
+            return
+        self.dlg.result = ones((self.dlg.width, self.dlg.height, 3), dtype=uint8)
+
+        # 生成和显示色斑图
+        for i in range(len(self.dlg.f)):
+            for fij in self.dlg.f[i]:
+                self.dlg.result[fij[0], fij[1]] = self.dlg.colorMap[i]
+        self.dlg.pushButton_changeColor.setEnabled(True)
+        misc.imsave('D:/temp.png', self.dlg.result)
+        self.dlg.label_IMG.setPixmap(QPixmap('D:/temp.png'))
+        self.iface.addRasterLayer('D:/temp.png', '分类结果')
+        self.dlg.label_progress.setText('完成！')
+        self.dlg.pushButton_save.setEnabled(True)
+        self.progressBar.close()
+        # self.dlg.show()
+        self.dlg.finish = True
+        return
+
+    def solve(self):
+        img = {}
+        for i in range(self.dlg.width):
+            for j in range(self.dlg.height):
+                img[(i, j)] = array([im[i, j] for im in self.dlg.img], dtype=int)
+        del self.dlg.img
+
+        C = 5
+        M = 0.5
+        # 随机生成初始中心点
+        Z = [img[(0, s)] for s in range(C)]
+        iteration = 0
+        self.progressBar.setMax(self.dlg.I)
+        self.progressBar.setValue(iteration)
+        # self.label_progress.setText('正在进行第 ' + str(iteration) + ' / ' + str(self.I) + ' 次迭代...')
+        while 1:
+            iteration += 1
+            # self.label_progress.setText('正在进行第 ' + str(iteration) + ' / ' + str(self.I) + ' 次迭代...')
+            self.progressBar.setValue(iteration)
+            # 求各点到聚类中心的距离
+            f = [[] for i in range(len(Z))]
+            for i in range(self.dlg.width):
+                for j in range(self.dlg.height):
+                    D = [distance(img[(i, j)], z) for z in Z]
+                    f[D.index(min(D))].append((i, j))
+
+            # 删除样本数少于最小样本数的类别
+            def thetaNFilter(x):
+                if len(x[0]) < self.dlg.thetaN:
+                    return False
+                else:
+                    return True
+
+            newlist = list(filter(thetaNFilter, [(ff, zz) for ff, zz in zip(f, Z)]))
+            f = [x[0] for x in newlist]
+            Z = [x[1] for x in newlist]
+
+            # 计算新的聚类中心
+            Z_temp = []
+            for i in range(len(Z)):
+                z = array([0 for i in range(self.dlg.numOfPicture)])
+                for x in f[i]:
+                    z = z + img[x]
+                Z_temp.append(z / len(f[i]))
+            Z = [i for i in Z_temp]
+
+            # 判断是否是最后一次迭代
+            if iteration == self.dlg.I:
+                return f
+
+            # 计算各聚类样本到聚类中心距离的平均值
+            dj = array([0.0 for ff in f])
+            for i, fj, zj in zip(range(len(Z)), f, Z):
+                for fij in fj:
+                    dj[i] += distance(img[fij], zj)
+                dj[i] = dj[i] / len(fj)
+
+            # 计算所有样本到相应聚类中心的距离平均值
+            d_avg = sum(dj * array([len(i) for i in f])) / sum([len(i) for i in f])
+
+            # 分裂操作
+            time_of_division = 0
+            if len(Z) < 2 * self.dlg.K and iteration % 2 == 1:
+                # 计算每一类别样本与聚类中心距离标准差
+                theta_S = []
+                for fj, zj in zip(f, Z):
+                    tan_f = [img[fij] for fij in fj]
+                    thetaj = array([0 for i in range(self.dlg.numOfPicture)])
+                    for fi in tan_f:
+                        thetaj = thetaj + (fi - zj) ** 2
+                    thetaj = sqrt(thetaj / (len(fj)))
+                    theta_S.append([max(thetaj), thetaj.tolist().index(max(thetaj))])
+
+                for fj, zj, thetajmax, j in zip(f, Z_temp, theta_S, range(len(Z_temp))):
+                    if thetajmax[0] > self.dlg.thetaS:
+                        if len(Z_temp) <= int(self.dlg.K / 2):
+                            zj1 = array([i for i in zj])
+                            zj2 = array([i for i in zj])
+                            zj1[thetajmax[1]] = zj[thetajmax[1]] + thetajmax[0] * M
+                            zj2[thetajmax[1]] = zj[thetajmax[1]] - thetajmax[0] * M
+                            Z.pop(findArray(Z, Z_temp[j]))
+                            Z.append(zj1)
+                            Z.append(zj2)
+                            time_of_division += 1
+                            continue
+                        if dj[j] > d_avg and len(f[j]) > 2 * (self.dlg.thetaN + 1):
+                            zj1 = array([i for i in zj])
+                            zj2 = array([i for i in zj])
+                            zj1[thetajmax[1]] = zj[thetajmax[1]] + thetajmax[0] * M
+                            zj2[thetajmax[1]] = zj[thetajmax[1]] - thetajmax[0] * M
+                            Z.pop(findArray(Z, Z_temp[j]))
+                            Z.append(zj1)
+                            Z.append(zj2)
+                            time_of_division += 1
+                            continue
+            # 分裂结束，进入下一次迭代
+            if time_of_division != 0:
+                continue
+
+            # 合并操作
+            d_z = {}
+            for i in range(len(Z)):
+                for j in range(len(Z)):
+                    if i == j: continue
+                    if distance(Z[i], Z[j]) < self.dlg.thetaC:
+                        d_z[(i, j)] = distance(Z[i], Z[j])
+            zNear = [i[0] for i in sorted(d_z.items(), key=lambda d: d[1])]
+            combined = []
+            for zz in zNear:
+                if zz[0] not in combined and zz[1] not in combined:
+                    z_double = (len(f[zz[0]]) * Z_temp[zz[0]] + len(f[zz[1]]) * Z_temp[zz[1]]) / (
+                            len(f[zz[0]]) + len(f[zz[1]]))
+                    Z.pop(findArray(Z, Z_temp[zz[0]]))
+                    Z.pop(findArray(Z, Z_temp[zz[1]]))
+                    Z.append(z_double)
+                    combined.append(zz[0])
+                    combined.append(zz[1])

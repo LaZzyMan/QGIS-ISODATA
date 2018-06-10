@@ -79,6 +79,7 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         super(ISODATA, self).__init__(parent)
         self.setupUi(self)
         self.numOfPicture = 0
+        self.finish = False
         self.img = []
         self.colorMap = {0: [176, 224, 230], 1: [255, 255, 0], 2: [255, 255, 255], 3: [65, 105, 225], 4: [0, 255, 0],
                          5: [176, 23, 31], 6: [255, 69, 0], 7: [41, 36, 33], 8: [160, 102, 211], 9: [135, 51, 36]}
@@ -265,7 +266,7 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         """
         # TODO: not implemented yet
         if len(self.img) == 0:
-            QMessageBox.information(self, 'Error', '未读入任何图像')
+            QMessageBox.information(self, 'ERROR', '未读入任何图像')
             return
         self.f = self.ISODATA()
         if self.f == None:
@@ -282,11 +283,12 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         # self.label_IMG.setPixmap(img2pixmap(self.result))
         # qimg = QtGui.QImage(self.result.data, self.width, self.height, QtGui.QImage.Format_RGB32)
         # self.label_IMG.setPixmap(QPixmap.fromImage(qimg))
-        misc.imsave('D:/temp.png', self.result)
-        self.label_IMG.setPixmap(QPixmap('D:/temp.png'))
+        misc.imsave('D:/temp1.png', self.result)
+        self.label_IMG.setPixmap(QPixmap('D:/temp1.png'))
         self.label_progress.setText('完成！')
-        os.remove('D:/temp.png')
+        os.remove('D:/temp1.png')
         self.pushButton_save.setEnabled(True)
+        self.finish = True
         return
 
     @pyqtSlot()
@@ -298,32 +300,32 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         if self.lineEdit_K.text() != '':
             self.K = int(self.lineEdit_K.text())
         else:
-            QMessageBox.information(self, 'Error', '参数不能为空')
+            QMessageBox.information(self, 'ERROR', '参数不能为空')
             return
         if self.lineEdit_thetaN.text() != '':
             self.thetaN = int(self.lineEdit_thetaN.text())
         else:
-            QMessageBox.information(self, 'Error', '参数不能为空')
+            QMessageBox.information(self, 'ERROR', '参数不能为空')
             return
         if self.lineEdit_thetaC.text() != '':
             self.thetaC = int(self.lineEdit_thetaC.text())
         else:
-            QMessageBox.information(self, 'Error', '参数不能为空')
+            QMessageBox.information(self, 'ERROR', '参数不能为空')
             return
         if self.lineEdit_thetaS.text() != '':
             self.thetaS = int(self.lineEdit_thetaS.text())
         else:
-            QMessageBox.information(self, 'Error', '参数不能为空')
+            QMessageBox.information(self, 'ERROR', '参数不能为空')
             return
         if self.lineEdit_I.text() != '':
             self.I = int(self.lineEdit_I.text())
         else:
-            QMessageBox.information(self, 'Error', '参数不能为空')
+            QMessageBox.information(self, 'ERROR', '参数不能为空')
             return
         if self.lineEdit_L.text() != '':
             self.L = int(self.lineEdit_L.text())
         else:
-            QMessageBox.information(self, 'Error', '参数不能为空')
+            QMessageBox.information(self, 'ERROR', '参数不能为空')
             return
         self.pushButton_iteration.setEnabled(True)
         self.pushButton_cancel.setEnabled(True)
@@ -368,10 +370,10 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         self.colorblocks[target].setStyleSheet('QPushButton{background-color:%s}' % color.name())
         for fij in self.f[target]:
             self.result[fij[0], fij[1]] = self.colorMap[target]
-        misc.imsave('D:/temp.png', self.result)
-        self.label_IMG.setPixmap(QPixmap('D:/temp.png'))
+        misc.imsave('D:/temp2.png', self.result)
+        self.label_IMG.setPixmap(QPixmap('D:/temp2.png'))
         self.label_progress.setText('完成！')
-        os.remove('D:/temp.png')
+        os.remove('D:/temp2.png')
 
     @pyqtSlot()
     def on_pushButton_close_clicked(self):
@@ -423,8 +425,8 @@ class ISODATA(QtWidgets.QDialog, Ui_ISODATA):
         Slot documentation goes here.
         """
         # TODO: not implemented yet
-        if self.result is None:
-            QMessageBox.information(self, 'Error', '没有可保存图像')
+        if not self.finish:
+            QMessageBox.information(self, 'ERROR', '没有可保存图像')
             return
         filename = QFileDialog.getSaveFileName(self, '保存文件', filter='Image Files(*.png *.jpg *.bmp *.TIF)')
         misc.imsave(filename[0], self.result)
